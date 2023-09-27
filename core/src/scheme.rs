@@ -3,13 +3,13 @@ use crate::types::CellValue;
 
 pub struct Scheme<T>
 where
-    T: Default + CellValue + ?Sized,
+    T: CellValue + ?Sized,
 {
     value_validators: Vec<fn(String) -> Rc<T>>,
 }
 impl<T> Scheme<T>
 where
-    T: Default + CellValue + ?Sized,
+    T: CellValue + ?Sized,
 {
     fn new(value_validators: Vec<fn(String) -> Rc<T>>) -> Self {
         Self { value_validators }
@@ -24,14 +24,14 @@ where
 #[derive(Default)]
 pub struct SchemeBuilder<T>
 where
-    T: Default + CellValue + ?Sized,
+    T: CellValue + ?Sized,
 {
     value_validators: Vec<fn(String) -> Rc<T>>
 }
 
 impl<T> SchemeBuilder<T>
 where
-    T: Default + CellValue + ?Sized,
+    T: CellValue + ?Sized,
 {
     pub fn with_type(mut self, validator: fn(String) -> Rc<T>) -> Self {
         self.value_validators.push(validator);

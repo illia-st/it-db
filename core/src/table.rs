@@ -1,29 +1,25 @@
 use std::cell::RefCell;
 use crate::row::Row;
+use crate::scheme::Scheme;
 use crate::types::CellValue;
 
-#[derive(Default)]
-pub struct Table<T>
-where
-    T: CellValue + Default + ?Sized
-{
+pub struct Table {
     name: String,
-    location: String,
-    rows: RefCell<Vec<Row<T>>>
+    scheme: Scheme<dyn CellValue>,
+    rows: RefCell<Vec<Row<dyn CellValue>>>,
 }
 
-impl<T> Table<T>
-where
-    T: CellValue + Default + ?Sized
+impl Table
 {
-    fn new(name: String, location: String) -> Self {
+    fn new(name: String, scheme: Scheme<dyn CellValue>) -> Self {
         Self {
             name,
-            location,
+            scheme,
             rows: RefCell::new(Vec::default()),
         }
     }
-    pub fn add_row(&self, new_row: Row<T>) {
+    pub fn add_row(&self, new_row: Row<dyn CellValue>) {
+        todo!("add scheme validation");
         self.rows.borrow_mut().push(new_row);
     }
     pub fn pop(&self) {
@@ -32,43 +28,33 @@ where
     pub fn get_name(&self) -> &str {
         self.name.as_str()
     }
-    pub fn get_location(&self) -> &str {
-        self.location.as_str()
-    }
 }
 #[derive(Default)]
-pub struct TableBuilder<T>
-where
-    T: CellValue + Default + ?Sized
-{
+pub struct TableBuilder {
     name: Option<String>,
-    location: Option<String>,
-    marker: std::marker::PhantomData<T>
+    scheme: Option<Scheme<dyn CellValue>>,
 }
 
-impl<T> TableBuilder<T>
-where
-    T: CellValue + Default + ?Sized
-{
+impl TableBuilder {
     pub fn with_name(mut self, name: String) -> Self {
         self.name = Some(name);
         self
     }
-    pub fn with_location(mut self, location: String) -> Self {
-        self.location = Some(location);
+    pub fn with_scheme(mut self, scheme: Scheme<dyn CellValue>) -> Self {
+        self.scheme = Some(scheme);
         self
     }
-    pub fn build(self) -> Result<Table<T>, String> {
-        let location = match self.location {
-            Some(location) => location,
-            None => return Err("location wasn't specified while constructing the table".to_string())
+    pub fn build(self) -> Result<Table, String> {
+        let scheme = match self.scheme {
+            Some(scheme) => scheme,
+            None => return Err("scheme wasn't specified while constructing the table".to_string())
         };
         let name = match self.name {
             Some(name) => name,
             None => return Err("name wasn't specified while constructing the table".to_string())
         };
         Ok(
-            Table::<T>::new(name, location)
+            Table::new(name, scheme)
         )
     }
 }

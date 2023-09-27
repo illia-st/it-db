@@ -1,17 +1,16 @@
 use std::rc::Rc;
 use crate::types::CellValue;
 
-#[derive(Default)]
 pub struct Row<T>
 where
-    T: CellValue + ?Sized + Default
+    T: CellValue + ?Sized
 {
     values: Vec<Rc<T>>,
 }
 
 impl<T> Row<T>
 where
-    T: CellValue + ?Sized + Default
+    T: CellValue + ?Sized
 {
     pub fn new(values: Vec<Rc<T>>) -> Self {
         Self { values }
