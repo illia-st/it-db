@@ -41,12 +41,12 @@ pub struct DatabaseBuilder {
 }
 
 impl DatabaseBuilder {
-    pub fn with_name(mut self, name: String) -> Self {
-        self.name = Some(name);
+    pub fn with_name(mut self, name: &str) -> Self {
+        self.name = Some(name.to_string());
         self
     }
-    pub fn with_location(mut self, location: String) -> Self {
-        self.location = Some(location);
+    pub fn with_location(mut self, location: &str) -> Self {
+        self.location = Some(location.to_string());
         self
     }
     pub fn build(self) -> Result<Database, String> {

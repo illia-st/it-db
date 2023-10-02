@@ -15,7 +15,7 @@ where
         Self { value_validators }
     }
     pub fn builder() -> SchemeBuilder<T> {
-        SchemeBuilder::<T>::default()
+        SchemeBuilder::<T>::new()
     }
     pub fn get_validators(&self) -> &[fn(String) -> Rc<T>] {
         self.value_validators.as_slice()
@@ -33,6 +33,9 @@ impl<T> SchemeBuilder<T>
 where
     T: CellValue + ?Sized,
 {
+    fn new() -> Self {
+        Self { value_validators: Vec::default() }
+    }
     pub fn with_type(mut self, validator: fn(String) -> Rc<T>) -> Self {
         self.value_validators.push(validator);
         self
