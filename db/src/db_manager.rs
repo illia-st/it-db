@@ -1,15 +1,15 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::fmt::format;
 use std::fs;
-use std::fs::{File, Metadata};
+use std::fs::File;
 use std::io::Read;
-use std::iter::Map;
-use std::ops::{Deref, DerefMut};
+use std::ops::DerefMut;
 use std::rc::Rc;
-use crate::db::{Database, DatabaseBuilder};
+use crate::db::Database;
 use core::types::CellValue;
-use toml::Value;
+use toml::Table;
+use core::scheme::Scheme;
+
 // Can operate with one db at the time
 #[derive(Debug)]
 struct DatabaseConfig {
@@ -21,14 +21,6 @@ pub struct DatabaseManager {
     supported_types: HashMap<String, fn(String) -> Rc<dyn CellValue>>,
     database: RefCell<Option<Database>>,
 }
-
-// impl Default for DatabaseManager {
-//     fn default() -> Self {
-//         Self {
-//             supported_types: Map::<String, fn(String) -> Rc<dyn CellValue>>
-//         }
-//     }
-// }
 
 impl DatabaseManager {
     // creating a database manager
@@ -45,9 +37,19 @@ impl DatabaseManager {
             .expect("Failed to read file");
 
         // Parse the TOML string into a toml::Value object
-        let parsed_toml: Value = toml::from_str(&toml_str).expect("Failed to parse TOML");
+        let parsed_toml = toml_str.parse::<Table>().unwrap();
+        // let parsed_toml: Value = toml::from_str(&toml_str).expect("Failed to parse TOML");
+        parsed_toml["supported_types"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .for_each(|value| {
+                if let toml::Value::String(supported_type) = value {
 
-        // TODO: debug the method to find out how it will be written
+                }
+            })
+        ;
+
         todo!()
     }
     pub fn create_db(&self, name: &str, location: &str) -> Result<(), String> {
@@ -118,7 +120,7 @@ impl DatabaseManager {
     fn add_table(&self, raw_table_data: Vec<u8>) {
         todo!("add ion data structures here")
     }
-    pub fn create_table(&self, table_name: String) -> Result<(), String> {
+    pub fn create_table(&self, table_name: String, scheme: Scheme<dyn CellValue>) -> Result<(), String> {
         // 1) check if the table already exists
         if self.database.borrow().is_none() {
             let err_string = "There is no active databases in db manager";
@@ -135,6 +137,7 @@ impl DatabaseManager {
                 return Err(err_string);
             },
         }
+        todo!("unfinished with scheme");
         Ok(())
     }
     pub fn delete_table(&self, table_name: &str) -> Result<(), String> {
@@ -196,5 +199,15 @@ impl DatabaseManager {
 impl Drop for DatabaseManager {
     fn drop(&mut self) {
         let _ = self.close_db();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::db_manager::DatabaseManager;
+
+    #[test]
+    fn test_creating_db_manager() {
+        DatabaseManager::new();
     }
 }
