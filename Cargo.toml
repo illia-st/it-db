@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+    "builder_generator",
     "core",
     "db",
     "db-manager",
