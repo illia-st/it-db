@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use crate::types::char_value::CharValue;
 use crate::types::int_value::IntValue;
 use crate::types::picture_value::PictureValue;
@@ -13,7 +14,7 @@ pub enum ValueType {
     Pic(PictureValue),
     Char(CharValue)
 }
-pub trait CellValue {
+pub trait CellValue: Debug {
     fn get_value(&self) -> ValueType;
 }
 

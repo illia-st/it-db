@@ -9,6 +9,7 @@ use crate::db::Database;
 use core::types::CellValue;
 use toml::Table;
 use core::scheme::Scheme;
+use core::row::Row;
 
 // Can operate with one db at the time
 #[derive(Debug)]
@@ -161,11 +162,64 @@ impl DatabaseManager {
             },
         }
     }
-    pub fn add_row(&self, _table_name: &str, _raw_values: &str) {
-        todo!()
+    pub fn add_row(&self, table_name: &str, raw_values: &str) -> Result<(), String>{
+        if self.database.borrow().is_none() {
+            let err_string = "There is no active databases in db manager";
+            log::error!("{}", err_string);
+            return Err(err_string.to_string());
+        }
+
+        let db = self.database.borrow();
+        let db_unwrapped = db.as_ref().unwrap();
+        let res = match db_unwrapped.get_tables_mut().get_mut(table_name) {
+            Some(table) => {
+                let scheme = table.get_scheme();
+                // TODO: add ion schema instead of using &str for raw values
+                // FIXME: bad splitter, need to use ion schema
+                let split_values: Vec<String> = raw_values
+                    .split(':')
+                    .map(|value| value.trim().to_string())
+                    .collect();
+                let mut row_values = Vec::with_capacity(split_values.len());
+                for (index, generator) in scheme.get_validators().iter().enumerate() {
+                    match generator(split_values[index].clone()) {
+                        Ok(value) => row_values.push(value),
+                        Err(err) => {
+                            log::error!("{err}");
+                            return Err(err);
+                        }
+                    }
+                }
+                let new_row = Row::new(row_values);
+                log::debug!("Added row into table {} with values {:?}", table_name, new_row);
+                table.add_row(new_row);
+                Ok(())
+            },
+            None => {
+                let err_string = format!("There is no table {} in {}", table_name, db_unwrapped.get_name());
+                log::error!("{}", err_string.as_str());
+                Err(err_string)
+            }
+        };
+        res
     }
-    pub fn delete_row(&self, _table_name: &str, _index: u64) {
-        todo!()
+    pub fn delete_row(&self, table_name: &str, index: u64) -> Result<(), String> {
+        if self.database.borrow().is_none() {
+            let err_string = "There is no active databases in db manager";
+            log::error!("{}", err_string);
+            return Err(err_string.to_string());
+        }
+        let db = self.database.borrow();
+        let db_unwrapped = db.as_ref().unwrap();
+        let res = match db_unwrapped.get_tables_mut().get_mut(table_name) {
+            Some(table) => table.erase(index),
+            None => {
+                let err_string = format!("There is no table {} in {}", table_name, db_unwrapped.get_name());
+                log::error!("{}", err_string.as_str());
+                Err(err_string)
+            }
+        };
+        res
     }
     pub fn close_db(&self) -> Result<(), String> {
         if self.database.borrow().is_none() {

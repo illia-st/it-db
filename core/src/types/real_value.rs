@@ -3,7 +3,7 @@ use value_generator::ValueGenerator;
 use crate::types::{CellValue, ValueType};
 use super::ValueBuilder;
 
-#[derive(Clone, Default, PartialEq, ValueGenerator)]
+#[derive(Clone, Debug, Default, PartialEq, ValueGenerator)]
 pub struct RealValue {
     value: f64,
 }

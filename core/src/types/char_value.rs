@@ -4,7 +4,7 @@ use super::ValueBuilder;
 use value_generator::ValueGenerator;
 
 
-#[derive(Clone, Default, PartialEq, ValueGenerator)]
+#[derive(Clone, Debug, Default, PartialEq, ValueGenerator)]
 pub struct CharValue {
     value: char,
 }

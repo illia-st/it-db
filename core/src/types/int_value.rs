@@ -2,7 +2,7 @@ use std::rc::Rc;
 use crate::types::{CellValue, ValueType};
 use super::ValueBuilder;
 use value_generator::ValueGenerator;
-#[derive(Clone, Default, ValueGenerator, PartialEq)]
+#[derive(Clone, Debug, Default, ValueGenerator, PartialEq)]
 pub struct IntValue {
     value: i64,
 }

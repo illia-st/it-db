@@ -26,8 +26,25 @@ impl Table
     pub fn pop(&self) {
         self.rows.borrow_mut().pop();
     }
+
+    pub fn erase(&self, index: u64) -> Result<(), String> {
+        let mut borrows_rows = self.rows.borrow_mut();
+        if borrows_rows.len() as u64 >= index {
+            return Err(format!(
+                "index is bigger that actual table size. Table - {}, size - {}, requested index - {}",
+                self.name.as_str(),
+                borrows_rows.len(),
+                index
+            ));
+        }
+        borrows_rows.remove(index as usize);
+        Ok(())
+    }
     pub fn get_name(&self) -> &str {
         self.name.as_str()
+    }
+    pub fn get_scheme(&self) -> &Scheme<dyn CellValue> {
+        &self.scheme
     }
 }
 #[derive(Default)]
