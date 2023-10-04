@@ -5,6 +5,7 @@ use crate::types::CellValue;
 
 pub struct Table {
     name: String,
+    #[allow(dead_code)]
     scheme: Scheme<dyn CellValue>,
     rows: RefCell<Vec<Row<dyn CellValue>>>,
 }
@@ -18,9 +19,9 @@ impl Table
             rows: RefCell::new(Vec::default()),
         }
     }
-    pub fn add_row(&self, new_row: Row<dyn CellValue>) {
+    pub fn add_row(&self, _new_row: Row<dyn CellValue>) {
         todo!("add scheme validation");
-        self.rows.borrow_mut().push(new_row);
+        // self.rows.borrow_mut().push(new_row);
     }
     pub fn pop(&self) {
         self.rows.borrow_mut().pop();

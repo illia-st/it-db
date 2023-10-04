@@ -5,6 +5,7 @@ use crate::types::real_value::RealValue;
 use crate::types::string_value::StringValue;
 
 // TODO: think about how we can refuse from using enum bcs smells like bad design decision
+#[derive(PartialEq)]
 pub enum ValueType {
     Int(IntValue),
     Str(StringValue),
@@ -15,6 +16,7 @@ pub enum ValueType {
 pub trait CellValue {
     fn get_value(&self) -> ValueType;
 }
+
 
 pub trait ValueBuilder {
     type Value;

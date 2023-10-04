@@ -1,6 +1,6 @@
 use std::cell::{Ref, RefCell, RefMut};
 use std::collections::HashMap;
-use std::ops::Deref;
+
 use core::table::Table;
 
 pub struct Database {

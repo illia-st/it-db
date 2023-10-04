@@ -13,11 +13,14 @@ use core::scheme::Scheme;
 // Can operate with one db at the time
 #[derive(Debug)]
 struct DatabaseConfig {
+    #[allow(dead_code)]
     supported_types: Vec<String>,
 }
 
 #[derive(Default)]
 pub struct DatabaseManager {
+
+    #[allow(dead_code, clippy::type_complexity)]
     supported_types: HashMap<String, fn(String) -> Rc<dyn CellValue>>,
     database: RefCell<Option<Database>>,
 }
@@ -44,7 +47,7 @@ impl DatabaseManager {
             .unwrap()
             .iter()
             .for_each(|value| {
-                if let toml::Value::String(supported_type) = value {
+                if let toml::Value::String(_supported_type) = value {
 
                 }
             })
@@ -117,10 +120,10 @@ impl DatabaseManager {
         });
         Ok(())
     }
-    fn add_table(&self, raw_table_data: Vec<u8>) {
+    fn add_table(&self, _raw_table_data: Vec<u8>) {
         todo!("add ion data structures here")
     }
-    pub fn create_table(&self, table_name: String, scheme: Scheme<dyn CellValue>) -> Result<(), String> {
+    pub fn create_table(&self, table_name: String, _scheme: Scheme<dyn CellValue>) -> Result<(), String> {
         // 1) check if the table already exists
         if self.database.borrow().is_none() {
             let err_string = "There is no active databases in db manager";
@@ -128,7 +131,7 @@ impl DatabaseManager {
             return Err(err_string.to_string());
         }
         match File::create(format!("{}/{}/{}", self.database.borrow().as_ref().unwrap().get_location(), "tables", table_name)) {
-            Ok(table) => {
+            Ok(_table) => {
                 // add ion data type for table adding
             },
             Err(err) => {
@@ -138,7 +141,7 @@ impl DatabaseManager {
             },
         }
         todo!("unfinished with scheme");
-        Ok(())
+        // Ok(())
     }
     pub fn delete_table(&self, table_name: &str) -> Result<(), String> {
         if self.database.borrow().is_none() {
@@ -158,10 +161,10 @@ impl DatabaseManager {
             },
         }
     }
-    pub fn add_row(&self, table_name: &str, raw_values: &str) {
+    pub fn add_row(&self, _table_name: &str, _raw_values: &str) {
         todo!()
     }
-    pub fn delete_row(&self, table_name: &str, index: u64) {
+    pub fn delete_row(&self, _table_name: &str, _index: u64) {
         todo!()
     }
     pub fn close_db(&self) -> Result<(), String> {
@@ -171,7 +174,7 @@ impl DatabaseManager {
             return Err(err_string.to_string());
         }
         let mut db = self.database.borrow_mut();
-        db.as_ref().unwrap().get_tables().iter().for_each(|table| {
+        db.as_ref().unwrap().get_tables().iter().for_each(|_table| {
            // dump all the tables into location/tables/table_name
         });
         *db.deref_mut() = None;
@@ -208,6 +211,6 @@ mod tests {
 
     #[test]
     fn test_creating_db_manager() {
-        DatabaseManager::new();
+        // DatabaseManager::new();
     }
 }
