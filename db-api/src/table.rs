@@ -6,11 +6,12 @@ use ion_rs::element::writer::TextKind;
 
 use crate::Encoder;
 use crate::Decoder;
+use crate::row::RowDTO;
 
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct TableRow {
+pub struct TableDTO {
     db_name: String,
-    table_name: String,
-    values: Vec<String>,
+    name: String,
+    rows: Vec<RowDTO>,
 }

@@ -4,6 +4,13 @@ pub trait Decoder {
 pub trait Encoder {
     fn encode(&self) -> Vec<u8>;
 }
-pub mod raw_values;
-pub mod table_row;
+pub mod db;
+pub mod row;
+pub mod table;
 pub mod envelope;
+
+pub mod int_value_dto;
+pub mod real_value_dto;
+pub mod char_value_dto;
+pub mod string_value_dto;
+pub mod picture_value_dto;

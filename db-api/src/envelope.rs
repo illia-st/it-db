@@ -4,7 +4,7 @@ use ion_rs::IonWriter;
 use ion_rs::IonReader;
 
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Envelope {
     command_type: String,
     data: Vec<u8>,
