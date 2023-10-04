@@ -1,0 +1,11 @@
+[package]
+name = "db-api"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+ion-rs = "0.18.1"
+
+log.workspace = true
+log4rs.workspace = true
