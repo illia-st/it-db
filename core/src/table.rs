@@ -19,6 +19,9 @@ impl Table
             rows: RefCell::new(Vec::default()),
         }
     }
+    pub fn builder() -> TableBuilder {
+        TableBuilder::default()
+    }
     pub fn add_row(&self, _new_row: Row<dyn CellValue>) {
         todo!("add scheme validation");
         // self.rows.borrow_mut().push(new_row);

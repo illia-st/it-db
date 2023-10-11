@@ -2,80 +2,42 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
-use std::io::Read;
 use std::ops::DerefMut;
 use std::rc::Rc;
+use std::sync::Arc;
 use core::db::Database;
 use core::types::CellValue;
-use toml::Table;
 use core::scheme::Scheme;
 use core::row::Row;
+use core::types::SUPPORTED_TYPES;
+use core::table::Table;
 
 // Can operate with one db-manager at the time
-#[derive(Debug)]
-// write procedure macros, which fill do the following
-// 1) Read .config/config.toml
-// 2) Parse suppported types column
-// 3) Each entry in supported types will be a name of structure which implements value_generator macros
-// 4) Then implement trait DbConfiguration and return HashMap<String, fn(String) -> Rc<dyn CellValue>> in one of the posssible methods
-struct DatabaseConfig {
-    supported_types: Vec<String>,
-}
-
 #[derive(Default)]
 pub struct DatabaseManager {
-    #[allow(dead_code, clippy::type_complexity)]
-    supported_types: HashMap<String, fn(String) -> Rc<dyn CellValue>>,
+    #[allow(clippy::type_complexity)]
+    supported_types: HashMap<String, Arc<fn(String) -> Result<Rc<dyn CellValue>, String>>>,
     database: RefCell<Option<Database>>,
 }
 
 impl DatabaseManager {
     // creating a database manager
     pub fn new() -> Self {
-        // read db-manager manager config
-        let file_path = format!("{}/.config/config.toml", env!("CARGO_MANIFEST_DIR"));
-
-        // Open the file for reading
-        let mut file = File::open(file_path).expect("Failed to open file");
-
-        // Read the file's contents into a String
-        let mut toml_str = String::new();
-        file.read_to_string(&mut toml_str)
-            .expect("Failed to read file");
-
-        // Parse the TOML string into a toml::Value object
-        let parsed_toml = toml_str.parse::<Table>().unwrap();
-        // let parsed_toml: Value = toml::from_str(&toml_str).expect("Failed to parse TOML");
-        parsed_toml["supported_types"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .for_each(|value| {
-                if let toml::Value::String(_supported_type) = value {
-                    // as I can remember I wanted here to fill a so called supported_types by
-                    // value type and it's generator for some reason. By doing so I will be able
-                    // to easily construct shemes while creating a new table
-                }
-            })
-        ;
-
-        todo!()
+        Self {
+            supported_types: SUPPORTED_TYPES.clone(),
+            database: RefCell::new(None),
+        }
     }
     pub fn create_db(&self, name: &str, location: &str) -> Result<(), String> {
         let _ = self.close_db();
-        // check fi such a dir is existing
+        // check if such a dir is existing
         if let Ok(metadata) = fs::metadata(location) {
             if !metadata.is_dir() {
                 return Err("provided path points to the file or symlink".to_string());
             }
         }
-        // create a dir
-        match fs::create_dir(format!("{}/{}", location, name)) {
-            Ok(_) => (),
-            Err(err) => return Err(format!("couldn't create a directory: {err}"))
-        }
-        // create a dir for tables
-        match File::create(format!("{}/{}/{}", location, name, "tables")) {
+        // create a file for database
+        match File::create(format!("{}/{}", location, name)) {
             Ok(_) => (),
             Err(err) => return Err(format!("couldn't create a file: {err}"))
         }
@@ -95,59 +57,51 @@ impl DatabaseManager {
         // check if provided location is a dir
         match fs::metadata(location) {
             Ok(metadata) => {
-                if !metadata.is_dir() {
-                    return Err("provided path points to the file or symlink".to_string());
+                if !metadata.is_file() {
+                    return Err("provided path points to the dir or symlink".to_string());
                 }
             },
-            Err(err) => return Err(format!("couldn't open a directory {}: {}", location, err))
+            Err(err) => return Err(format!("couldn't read the file {}: {}", location, err))
         };
         // read file location/table using amazon ion
-        let tables = match fs::read_dir(format!("{}/{}", location, "tables")) {
-            Ok(tables) => tables,
+        let _database = match fs::read(format!("{}/{}", location, "tables")) {
+            Ok(database) => database,
             Err(err) => {
                 let err_string = format!("The error is occurred while trying to read tables: {}", err);
                 log::error!("{}", err_string.as_str());
                 return Err(err_string);
             }
         };
-        tables.for_each(|entry| {
-            let unwrapped_entry = match entry {
-                Ok(entry) => entry,
-                Err(err) => {
-                    let err_string = format!("The error is occurred while trying to read tables: {}", err);
-                    log::error!("{}", err_string.as_str());
-                    return;
-                },
-            };
-            match fs::read(unwrapped_entry.path()) {
-                Ok(binary_data) => self.add_table(binary_data),
-                Err(err) => log::error!("The error is occurred while trying to read tables: {}", err),
-            };
-        });
+        // TODO: use ion dto structures to convert database Vec<u8> into Database structure
         Ok(())
     }
-    fn add_table(&self, _raw_table_data: Vec<u8>) {
-        todo!("add ion data structures here")
-    }
-    pub fn create_table(&self, table_name: String, _scheme: Scheme<dyn CellValue>) -> Result<(), String> {
+    pub fn create_table(&self, table_name: String, data_types: Vec<String>) -> Result<(), String> {
         // 1) check if the table already exists
         if self.database.borrow().is_none() {
             let err_string = "There is no active databases in db-manager manager";
             log::error!("{}", err_string);
             return Err(err_string.to_string());
         }
-        match File::create(format!("{}/{}/{}", self.database.borrow().as_ref().unwrap().get_location(), "tables", table_name)) {
-            Ok(_table) => {
-                // add ion data type for table adding
-            },
-            Err(err) => {
-                let err_string = format!("Couldn't create a new table {}: {}", table_name, err);
-                log::error!("{}", err_string.as_str());
-                return Err(err_string);
-            },
+        #[allow(clippy::type_complexity)]
+        let mut value_generators: Vec<Arc<fn(String) -> Result<Rc<dyn CellValue>, String>>> = Vec::with_capacity(data_types.len());
+        for data_type in data_types.iter() {
+            match SUPPORTED_TYPES.get(data_type.as_str()) {
+                Some(value_generator) => value_generators.push(value_generator.clone()),
+                None => return Err(format!("No such supported data type: {}", data_type))
+            }
         }
-        todo!("unfinished with scheme");
-        // Ok(())
+        let scheme = Scheme::new(value_generators);
+        let table = match Table::builder()
+            .with_name(table_name.clone())
+            .with_scheme(scheme)
+            .build() {
+            Ok(table) => table,
+            Err(err) => return Err(err)
+        };
+        let mut db = self.database.borrow_mut();
+        let unwrapped_db = db.as_mut().unwrap();
+        unwrapped_db.get_tables_mut().insert(table_name.to_string(), table);
+        Ok(())
     }
     pub fn delete_table(&self, table_name: &str) -> Result<(), String> {
         if self.database.borrow().is_none() {
@@ -155,16 +109,12 @@ impl DatabaseManager {
             log::error!("{}", err_string);
             return Err(err_string.to_string());
         }
-        match fs::remove_file(format!("{}/{}/{}", self.database.borrow().as_ref().unwrap().get_location(), "tables", table_name)) {
-            Ok(()) => {
-                log::debug!("table {} has been removed", table_name);
-                Ok(())
-            },
-            Err(err) => {
-                let err_string = format!("Couldn't delete table {}: {}", table_name, err);
-                log::error!("{}", err_string.as_str());
-                Err(err_string)
-            },
+        let mut db = self.database.borrow_mut();
+        let db_unwrapped = db.as_mut().unwrap();
+        let mut tables = db_unwrapped.get_tables_mut();
+        match tables.deref_mut().remove(table_name) {
+            Some(_) => Ok(()),
+            None => Err(format!("There is no table with name {}", table_name))
         }
     }
     pub fn add_row(&self, table_name: &str, raw_values: &str) -> Result<(), String>{
@@ -179,15 +129,13 @@ impl DatabaseManager {
         let res = match db_unwrapped.get_tables_mut().get_mut(table_name) {
             Some(table) => {
                 let scheme = table.get_scheme();
-                // TODO: add ion schema instead of using &str for raw values
-                // FIXME: bad splitter, need to use ion schema
-                let split_values: Vec<String> = raw_values
-                    .split(':')
-                    .map(|value| value.trim().to_string())
-                    .collect();
-                let mut row_values = Vec::with_capacity(split_values.len());
-                for (index, generator) in scheme.get_validators().iter().enumerate() {
-                    match generator(split_values[index].clone()) {
+                let split_values = raw_values
+                    .split(';')
+                    .map(|value| value.trim().to_string());
+
+                let mut row_values = Vec::default();
+                for (generator, raw_value) in scheme.get_validators().iter().zip(split_values) {
+                    match generator(raw_value) {
                         Ok(value) => row_values.push(value),
                         Err(err) => {
                             log::error!("{err}");
@@ -234,7 +182,7 @@ impl DatabaseManager {
         }
         let mut db = self.database.borrow_mut();
         db.as_ref().unwrap().get_tables().iter().for_each(|_table| {
-           // dump all the tables into location/tables/table_name
+            todo!("dump the db into the file in binary format")
         });
         *db.deref_mut() = None;
         Ok(())
@@ -253,6 +201,9 @@ impl DatabaseManager {
             },
         }
     }
+    pub fn get_table(&self, _table_name: &str) -> Result<(), String> {
+        todo!("Return table by it's name");
+    }
     pub fn get_db(&self) {
         todo!()
     }
@@ -266,7 +217,7 @@ impl Drop for DatabaseManager {
 
 #[cfg(test)]
 mod tests {
-    use crate::db_manager::DatabaseManager;
+    
 
     #[test]
     fn test_creating_db_manager() {
