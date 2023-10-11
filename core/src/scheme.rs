@@ -42,6 +42,9 @@ where
     pub fn get_columns(&self) -> Vec<String> {
         self.columns.clone()
     }
+    pub fn set_columns(&mut self, columns: Vec<String>) {
+        self.columns = columns;
+    }
 }
 #[derive(Default)]
 pub struct SchemeBuilder<T>

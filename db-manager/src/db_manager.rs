@@ -254,6 +254,26 @@ impl DatabaseManager {
         res.set_rows(ans);
         Ok(res)
     }
+
+    pub fn rename(&self, table_name: &str, new_columns_names: Vec<String>) -> Result<(), String> {
+        if self.database.borrow().is_none() {
+            return Err("There is no active databases in db-manager manager".to_string());
+        }
+        let db = self.database.borrow();
+        let db_unwrapped = db.as_ref().unwrap();
+        let res = match db_unwrapped.get_tables_mut().get_mut(table_name) {
+            Some(table) => {
+                let scheme = table.get_scheme_mut();
+                if scheme.get_columns().len() != new_columns_names.len() {
+                    return Err("wrong number of tables".to_string());
+                }
+                scheme.set_columns(new_columns_names);
+                Ok(())
+            },
+            None => Err(format!("There is no table with name {}", table_name))
+        };
+        res
+    }
 }
 
 impl Drop for DatabaseManager {

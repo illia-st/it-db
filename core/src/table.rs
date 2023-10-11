@@ -52,6 +52,10 @@ impl Table
         &self.scheme
     }
 
+    pub fn get_scheme_mut(&mut self) -> &mut Scheme<dyn CellValue> {
+        &mut self.scheme
+    }
+
     pub fn get_rows(&self) -> Ref<Vec<Rc<Row<dyn CellValue>>>> {
         self.rows.borrow()
     }
