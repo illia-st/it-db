@@ -1,7 +1,5 @@
 pub enum Action {
     Tick,
-    Increment,
-    Decrement,
     Quit,
     None,
 }
