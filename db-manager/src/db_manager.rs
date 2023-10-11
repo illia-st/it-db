@@ -87,7 +87,7 @@ impl DatabaseManager {
         let mut value_generators: Vec<Arc<fn(String) -> Result<Rc<dyn CellValue>, String>>> = Vec::with_capacity(data_types.len());
         let mut new_columns = Vec::with_capacity(columns.len());
         for (data_type, column_name) in data_types.iter().zip(columns) {
-            match SUPPORTED_TYPES.get(*data_type) {
+            match self.supported_types.get(*data_type) {
                 Some(value_generator) => value_generators.push(value_generator.clone()),
                 None => return Err(format!("No such supported data type: {}", data_type))
             }
