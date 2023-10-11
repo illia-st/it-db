@@ -95,6 +95,12 @@ impl TableBuilder {
     }
 }
 
+pub struct TableDTO {
+    name: String,
+    scheme: SchemeDTO,
+    rows: Vec<RowDTO>,
+}
+
 #[cfg(test)]
 mod tests {
     // TODO: implement tests

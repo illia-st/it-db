@@ -64,6 +64,12 @@ impl DatabaseBuilder {
     }
 }
 
+pub struct DatabaseDTO {
+    name: String,
+    location: String,
+    tables: Vec<TableDTO>,
+}
+
 #[cfg(test)]
 mod tests {
     // TODO: implement tests
