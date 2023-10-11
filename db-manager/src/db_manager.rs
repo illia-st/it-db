@@ -11,16 +11,19 @@ use toml::Table;
 use core::scheme::Scheme;
 use core::row::Row;
 
-// Can operate with one db at the time
+// Can operate with one db-manager at the time
 #[derive(Debug)]
+// write procedure macros, which fill do the following
+// 1) Read .config/config.toml
+// 2) Parse suppported types column
+// 3) Each entry in supported types will be a name of structure which implements value_generator macros
+// 4) Then implement trait DbConfiguration and return HashMap<String, fn(String) -> Rc<dyn CellValue>> in one of the posssible methods
 struct DatabaseConfig {
-    #[allow(dead_code)]
     supported_types: Vec<String>,
 }
 
 #[derive(Default)]
 pub struct DatabaseManager {
-
     #[allow(dead_code, clippy::type_complexity)]
     supported_types: HashMap<String, fn(String) -> Rc<dyn CellValue>>,
     database: RefCell<Option<Database>>,
@@ -29,7 +32,7 @@ pub struct DatabaseManager {
 impl DatabaseManager {
     // creating a database manager
     pub fn new() -> Self {
-        // read db manager config
+        // read db-manager manager config
         let file_path = format!("{}/.config/config.toml", env!("CARGO_MANIFEST_DIR"));
 
         // Open the file for reading
@@ -49,7 +52,9 @@ impl DatabaseManager {
             .iter()
             .for_each(|value| {
                 if let toml::Value::String(_supported_type) = value {
-
+                    // as I can remember I wanted here to fill a so called supported_types by
+                    // value type and it's generator for some reason. By doing so I will be able
+                    // to easily construct shemes while creating a new table
                 }
             })
         ;
@@ -74,7 +79,7 @@ impl DatabaseManager {
             Ok(_) => (),
             Err(err) => return Err(format!("couldn't create a file: {err}"))
         }
-        // build db using Database::builder()
+        // build db-manager using Database::builder()
         let database = Database::builder()
             .with_location(location)
             .with_name(name)
@@ -127,7 +132,7 @@ impl DatabaseManager {
     pub fn create_table(&self, table_name: String, _scheme: Scheme<dyn CellValue>) -> Result<(), String> {
         // 1) check if the table already exists
         if self.database.borrow().is_none() {
-            let err_string = "There is no active databases in db manager";
+            let err_string = "There is no active databases in db-manager manager";
             log::error!("{}", err_string);
             return Err(err_string.to_string());
         }
@@ -146,7 +151,7 @@ impl DatabaseManager {
     }
     pub fn delete_table(&self, table_name: &str) -> Result<(), String> {
         if self.database.borrow().is_none() {
-            let err_string = "There is no active databases in db manager";
+            let err_string = "There is no active databases in db-manager manager";
             log::error!("{}", err_string);
             return Err(err_string.to_string());
         }
@@ -164,7 +169,7 @@ impl DatabaseManager {
     }
     pub fn add_row(&self, table_name: &str, raw_values: &str) -> Result<(), String>{
         if self.database.borrow().is_none() {
-            let err_string = "There is no active databases in db manager";
+            let err_string = "There is no active databases in db-manager manager";
             log::error!("{}", err_string);
             return Err(err_string.to_string());
         }
@@ -205,7 +210,7 @@ impl DatabaseManager {
     }
     pub fn delete_row(&self, table_name: &str, index: u64) -> Result<(), String> {
         if self.database.borrow().is_none() {
-            let err_string = "There is no active databases in db manager";
+            let err_string = "There is no active databases in db-manager manager";
             log::error!("{}", err_string);
             return Err(err_string.to_string());
         }
@@ -223,7 +228,7 @@ impl DatabaseManager {
     }
     pub fn close_db(&self) -> Result<(), String> {
         if self.database.borrow().is_none() {
-            let err_string = "There is no active databases in db manager";
+            let err_string = "There is no active databases in db-manager manager";
             log::error!("{}", err_string);
             return Err(err_string.to_string());
         }
@@ -235,14 +240,14 @@ impl DatabaseManager {
         Ok(())
     }
     pub fn delete_db(&self, location: &str) -> Result<(), String> {
-        // TODO: it will be nice to check if the provided location actually is a db
+        // TODO: it will be nice to check if the provided location actually is a db-manager
         match fs::remove_dir_all(location) {
             Ok(()) => {
-                log::debug!("db in {} has been removed", location);
+                log::debug!("db-manager in {} has been removed", location);
                 Ok(())
             },
             Err(err) => {
-                let err_string = format!("Couldn't delete db in {}: {}", location, err);
+                let err_string = format!("Couldn't delete db-manager in {}: {}", location, err);
                 log::error!("{}", err_string.as_str());
                 Err(err_string)
             },
