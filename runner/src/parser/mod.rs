@@ -126,6 +126,11 @@ pub fn get_parser() -> Command {
                             .short('r')
                             .required(true)
                             .action(ArgAction::Set),
+                            
+                        Arg::new("column_name")
+                            .short('c')
+                            .required(true)
+                            .action(ArgAction::Set),
                     ]),
             ])
 }

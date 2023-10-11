@@ -1,34 +1,32 @@
-use clap::{Command, Arg, ArgAction};
-use ratatui::{
-    prelude::{CrosstermBackend, Terminal},
-    widgets::Paragraph,
-};
-use runner::parser::get_parser;
+use ratatui::prelude::{CrosstermBackend, Terminal};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    crossterm::terminal::enable_raw_mode()?;
-    crossterm::execute!(std::io::stderr(), crossterm::terminal::EnterAlternateScreen)?;
+use anyhow::Result;
+use runner::app::app::App;
+use runner::tui::event::{Event, EventHandler};
+use runner::tui::tui::Tui;
+use runner::tui::update::update;
 
-    let mut command = get_parser();
 
-    let mut terminal = Terminal::new(CrosstermBackend::new(std::io::stderr()))?;
+fn main() -> Result<()> {
+    let mut app = App::new();
 
-    loop {
-        terminal.draw(|f| {
-            f.render_widget(Paragraph::new("q"), f.size());
-        })?;
+    let backend = CrosstermBackend::new(std::io::stderr());
+    let terminal = Terminal::new(backend)?;
+    let events = EventHandler::new(250);
+    let mut tui = Tui::new(terminal, events);
+    tui.enter()?;
 
-        if crossterm::event::poll(std::time::Duration::from_millis(250))? {
-            if let crossterm::event::Event::Key(key) = crossterm::event::read()? {
-                if key.code == crossterm::event::KeyCode::Char('q') {
-                    break;
-                }
-            }
-        }
+    while !app.should_quit {
+        tui.draw(&mut app)?;
+
+        match tui.events.next()? {
+            Event::Tick => {},
+            Event::Key(key_event) => update(&mut app, key_event),
+            Event::Mouse(_) => {},
+            Event::Resize(_, _) => {},
+        };
     }
 
-    crossterm::execute!(std::io::stderr(), crossterm::terminal::LeaveAlternateScreen)?;
-    crossterm::terminal::disable_raw_mode()?;
-
+    tui.exit()?;
     Ok(())
 }
