@@ -1,13 +1,15 @@
 use std::cell::RefCell;
+use std::rc::Rc;
 use crate::row::Row;
 use crate::scheme::Scheme;
 use crate::types::CellValue;
 
+#[derive(Clone)]
 pub struct Table {
     name: String,
     #[allow(dead_code)]
     scheme: Scheme<dyn CellValue>,
-    rows: RefCell<Vec<Row<dyn CellValue>>>,
+    rows: RefCell<Vec<Rc<Row<dyn CellValue>>>>,
 }
 
 impl Table

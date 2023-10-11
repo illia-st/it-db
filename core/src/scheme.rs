@@ -12,6 +12,15 @@ where
     // TODO: add columns name
     // columns: Vec<String>,
 }
+impl<T> Clone for Scheme<T>
+where
+    T: CellValue + ?Sized,
+{
+    fn clone(&self) -> Self {
+        Self { value_generators: self.value_generators.clone() }
+    }
+}
+
 impl<T> Scheme<T>
 where
     T: CellValue + ?Sized,
