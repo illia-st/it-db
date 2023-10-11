@@ -211,6 +211,49 @@ impl DatabaseManager {
         }
         Ok(self.database.borrow().as_ref().unwrap().get_tables().keys().cloned().collect())
     }
+
+    pub fn join(&self, lhs_table_name: &str, rhs_table_name: &str) -> Result<Table, String> {
+        if self.database.borrow().is_none() {
+            return Err("There is no active databases in db-manager manager".to_string());
+        }
+        let lhs = match self.get_table(lhs_table_name) {
+            Ok(lhs) => lhs,
+            Err(err) => return Err(err)
+        };
+        let rhs = match self.get_table(rhs_table_name) {
+            Ok(rhs) => rhs,
+            Err(err) => return Err(err)
+        };
+        let lhs_rows = lhs.get_rows();
+        let rhs_rows = rhs.get_rows();
+        if lhs_rows.len() != rhs_rows.len() {
+            return Err("different number of columns".to_string());
+        }
+
+        let mut ans = lhs_rows.clone();
+        for rhs_row in rhs_rows.iter() {
+            let mut flag = false;
+            for lhs_row in lhs_rows.iter() {
+                let lhs_row_values = lhs_row.get_values();
+                for (index, value) in lhs_row.get_values().iter().enumerate() {
+                    if lhs_row_values[index].as_ref().get_value() == value.as_ref().get_value() {
+                        flag = true;
+                    }
+                }
+            }
+            if !flag {
+                ans.push(rhs_row.clone());
+            }
+        }
+        // let scheme = Scheme::new(lhs.get_columns(), lhs.get)
+        let res = Table::builder()
+            .with_scheme(lhs.get_scheme().clone())
+            .with_name("Join".to_string())
+            .build()
+            .unwrap();
+        res.set_rows(ans);
+        Ok(res)
+    }
 }
 
 impl Drop for DatabaseManager {
