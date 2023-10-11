@@ -75,20 +75,25 @@ impl DatabaseManager {
         // TODO: use ion dto structures to convert database Vec<u8> into Database structure
         Ok(())
     }
-    pub fn create_table(&self, table_name: &str, data_types: Vec<&str>) -> Result<(), String> {
+    pub fn create_table(&self, table_name: &str, columns: Vec<&str>, data_types: Vec<&str>) -> Result<(), String> {
         // 1) check if the table already exists
         if self.database.borrow().is_none() {
             return Err("There is no active databases in db-manager manager".to_string());
         }
+        if columns.len() != data_types.len() {
+            return Err("Different number of columns and data types".to_string());
+        }
         #[allow(clippy::type_complexity)]
         let mut value_generators: Vec<Arc<fn(String) -> Result<Rc<dyn CellValue>, String>>> = Vec::with_capacity(data_types.len());
-        for data_type in data_types.iter() {
+        let mut new_columns = Vec::with_capacity(columns.len());
+        for (data_type, column_name) in data_types.iter().zip(columns) {
             match SUPPORTED_TYPES.get(*data_type) {
                 Some(value_generator) => value_generators.push(value_generator.clone()),
                 None => return Err(format!("No such supported data type: {}", data_type))
             }
+            new_columns.push(column_name.to_string());
         }
-        let scheme = Scheme::new(value_generators);
+        let scheme = Scheme::new(new_columns, value_generators);
         let table = match Table::builder()
             .with_name(table_name.to_string())
             .with_scheme(scheme)
@@ -117,8 +122,10 @@ impl DatabaseManager {
         if self.database.borrow().is_none() {
             return Err("There is no active databases in db-manager manager".to_string());
         }
-        let res = match self.get_table(table_name) {
-            Ok(table) => {
+        let db = self.database.borrow();
+        let db_unwrapped = db.as_ref().unwrap();
+        let res = match db_unwrapped.get_tables_mut().get_mut(table_name) {
+            Some(table) => {
                 let scheme = table.get_scheme();
                 let split_values = raw_values
                     .split(';')
@@ -138,7 +145,7 @@ impl DatabaseManager {
                 table.add_row(new_row);
                 Ok(())
             },
-            Err(err) => Err(err)
+            None => Err(format!("There is no table with name {}", table_name))
         };
         res
     }
