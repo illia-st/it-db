@@ -1,20 +1,12 @@
-use clap::{Command, Arg, ArgAction};
-use ratatui::{
-    prelude::{CrosstermBackend, Terminal},
-    widgets::Paragraph,
-};
+use clap::{Arg, ArgAction, Command};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    crossterm::terminal::enable_raw_mode()?;
-    crossterm::execute!(std::io::stderr(), crossterm::terminal::EnterAlternateScreen)?;
-
-    let mut command = 
-        clap::Command::new("database")
+pub fn get_parser() -> Command {
+    Command::new("database")
             .author("Tretiakov Yehor, egorken3v@gmail.com")
             .version("0.0.1")
             .about("Some cool info!")
             .subcommands([
-                clap::Command::new("create")
+                Command::new("create")
                     .args([
                         Arg::new("database")
                             .short('d')
@@ -50,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .action(ArgAction::Set),
                     ]),
 
-                clap::Command::new("delete")
+                Command::new("delete")
                     .args([
                         Arg::new("database")
                             .short('d')
@@ -76,7 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .action(ArgAction::Set),
                     ]),
 
-                clap::Command::new("open")
+                Command::new("open")
                     .args([
                         Arg::new("database_path")
                             .short('p')
@@ -84,7 +76,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .action(ArgAction::Set)
                     ]),
 
-                clap::Command::new("close")
+                Command::new("close")
                     .args([
                         Arg::new("save")
                             .short('s')
@@ -92,7 +84,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .action(ArgAction::SetTrue)
                     ]),
 
-                clap::Command::new("add")
+                Command::new("add")
                     .args([
                         Arg::new("table_name")
                             .short('n')
@@ -104,7 +96,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .action(ArgAction::Set)
                     ]),
                 
-                clap::Command::new("remove")
+                Command::new("remove")
                     .args([
                         Arg::new("table_name")
                             .short('n')
@@ -112,7 +104,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .action(ArgAction::Set),
                     ]),
 
-                clap::Command::new("rename")
+                Command::new("rename")
                     .args([
                         Arg::new("table_name")
                             .short('n')
@@ -124,7 +116,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .action(ArgAction::Set),
                     ]),
 
-                clap::Command::new("join")
+                Command::new("join")
                     .args([
                         Arg::new("left_table_name")
                             .short('l')
@@ -135,26 +127,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .required(true)
                             .action(ArgAction::Set),
                     ]),
-            ]);
+            ])
+}
 
-    let mut terminal = Terminal::new(CrosstermBackend::new(std::io::stderr()))?;
+#[cfg(test)]
+mod tests {
+    use crate::parser::get_parser;
 
-    loop {
-        terminal.draw(|f| {
-            f.render_widget(Paragraph::new("q"), f.size());
-        })?;
-
-        if crossterm::event::poll(std::time::Duration::from_millis(250))? {
-            if let crossterm::event::Event::Key(key) = crossterm::event::read()? {
-                if key.code == crossterm::event::KeyCode::Char('q') {
-                    break;
-                }
-            }
-        }
-    }
-
-    crossterm::execute!(std::io::stderr(), crossterm::terminal::LeaveAlternateScreen)?;
-    crossterm::terminal::disable_raw_mode()?;
-
-    Ok(())
+    #[test]
+    fn parser_is_parsing_correctly() {
+        let mut command = get_parser();
+        
+        let args = vec!["database", "create", "-t"];
+        assert!(command.try_get_matches_from_mut(args).is_err());
+        let args = vec!["database", "create", "-t", "-n", "\"\"", "-c", "\"\"", "-v", "\"\""];
+        assert!(command.try_get_matches_from_mut(args).is_ok());
+        let args = vec!["database", "create", "-d", "-n", "\"\"", "-p", "\"\""];
+        assert!(command.try_get_matches_from_mut(args).is_ok());
+        let args = vec!["database", "close"];
+        assert!(command.try_get_matches_from_mut(args).is_ok());
+        let args = vec!["database", "close", "-s"];
+        assert!(command.try_get_matches_from_mut(args).is_ok());
+        let args = vec!["database", "close", "-s", "\"\""];
+        assert!(command.try_get_matches_from_mut(args).is_err());
+    }   
 }
