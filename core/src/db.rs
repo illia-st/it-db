@@ -4,9 +4,9 @@ use std::collections::HashMap;
 use crate::table::Table;
 
 pub struct Database {
-    name: String,
-    location: String,
-    tables: RefCell<HashMap<String, Table>>,
+    pub name: String,
+    pub location: String,
+    pub tables: RefCell<HashMap<String, Table>>,
 }
 
 impl Database {
