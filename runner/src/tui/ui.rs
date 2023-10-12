@@ -19,6 +19,7 @@ use ratatui::style::Color;
 use ratatui::style::Style;
 
 use rand;
+use ratatui::widgets::Wrap;
 
 use crate::app::app::{App, DatabaseState, ClosedDatabaseAppState};
 use crate::tui::tui::Frame;
@@ -63,17 +64,18 @@ fn render_default_screen(f: &mut Frame, app: &mut App) {
 }
 
 fn render_default_screen_body(f: &mut Frame, layout : Rect, color: Color) {
-    let mut rng = rand::thread_rng();
+    let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
     f.render_widget(
         Paragraph::new(format!("\n\nWelcome to the DB paradise!\nPress `Ctrl-C` to stop running."))
             .block(
                 Block::default()
                     .title_alignment(Alignment::Center)
                     .borders(Borders::ALL)
-                    .border_type(BorderType::Double)
+                    .border_type(BorderType::Thick)
                     .border_style(Style::default().fg(color)),
             )
             .style(Style::default().fg(Color::Rgb(rng.gen_range(0..255), rng.gen_range(0..255), rng.gen_range(0..255))).bold())
+            .wrap(Wrap { trim: true })
             .alignment(Alignment::Center),
             layout,
     )
@@ -96,10 +98,36 @@ fn render_screen_hood(f: &mut Frame, layout: Rect, color: Color, text: String) {
                     )
                     .title_alignment(Alignment::Center)
                     .borders(Borders::ALL)
-                    .border_type(BorderType::Double),
+                    .border_type(BorderType::Thick),
             )
             .style(Style::default().fg(color))
+            .wrap(Wrap { trim: true })
             .alignment(Alignment::Center),
+            layout,
+    )
+}
+
+fn render_active_menu(f: &mut Frame, layout: Rect, color: Color, tables: Vec<String>, index: usize) {
+    let mut lines: Vec<Line> = Vec::new(); 
+    for i in 0..tables.len() {
+        if i == index {
+            lines.push(Line::from(Span::styled(&tables[i], Style::default().fg(Color::Cyan).bold())))
+        } else {
+            lines.push(Line::from(Span::styled(&tables[i], Style::default().fg(Color::DarkGray))))
+        }
+    }
+    
+    f.render_widget(
+        Paragraph::new(lines)
+            .block(
+                Block::default()
+                    .title_alignment(Alignment::Center)
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Thick)
+                    .border_style(Style::default().fg(color)),
+            )
+            .wrap(Wrap { trim: true })
+            .alignment(Alignment::Left),
             layout,
     )
 }
@@ -134,7 +162,7 @@ fn render_main_screen(f: &mut Frame, app: &mut App) {
                 render_default_screen_body(f, inner_layout[1], Color::White);
             },
             crate::app::app::OpenedDatabaseAppState::ActiveMenu => {
-                render_default_screen_body(f, layout[0], Color::Cyan);
+                render_active_menu(f, layout[0], Color::Cyan, vec!["0\n".to_owned(), "1".to_owned()], 0);
                 render_screen_hood(f, inner_layout[0], Color::White, "".to_owned());
                 render_default_screen_body(f, inner_layout[1], Color::White);
             },

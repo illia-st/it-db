@@ -110,4 +110,8 @@ impl App {
     pub fn remove_last_char_from_the_buffer(&mut self) {
         self.buffer.pop();
     }
+
+    pub fn get_table_list(&self) -> Vec<String> {
+        self.database_manager.get_table_list()
+    }
 }

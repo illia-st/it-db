@@ -214,6 +214,9 @@ impl DatabaseManager {
     pub fn db_is_opened(&self) -> bool {
         self.database.borrow().is_some()
     }
+    pub fn get_table_list(&self) -> Vec<String> {
+        self.database.borrow().as_ref().unwrap().get_tables().keys().map(|x| -> String {x.clone()}).collect::<Vec<String>>()
+    }
 }
 
 impl Drop for DatabaseManager {
