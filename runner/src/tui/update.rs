@@ -46,24 +46,31 @@ pub fn update(app: &mut App, key_event: KeyEvent) {
                 app.clear_buffer();
             }
         },
+        KeyCode::Backspace => {
+            app.remove_last_char_from_the_buffer();
+        },
         KeyCode::Left => {
             if let DatabaseState::Opened(_) = app.get_database_state() {
                 app.activete_opened_database_active_menu();
+                app.clear_buffer();
             }
         },
         KeyCode::Right => {
             if let DatabaseState::Opened(_) = app.get_database_state() {
                 app.activete_opened_database_hood();
+                app.clear_buffer();
             }
         },
         KeyCode::Up => {
             if let DatabaseState::Opened(_) = app.get_database_state() {
                 app.activete_opened_database_hood();
+                app.clear_buffer();
             }
         },
         KeyCode::Down => {
             if let DatabaseState::Opened(_) = app.get_database_state() {
                 app.activete_opened_database_active_table();
+                app.clear_buffer();
             }
         },
         _ => {},

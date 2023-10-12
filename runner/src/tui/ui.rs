@@ -45,7 +45,7 @@ fn render_default_screen(f: &mut Frame, app: &mut App) {
             ].as_ref())
             .split(f.size());
     
-        render_default_screen_body(f, layout[0]);
+        render_default_screen_body(f, layout[0], Color::White);
     
         match state {
             ClosedDatabaseAppState::ActiveHood(e) => {
@@ -62,7 +62,7 @@ fn render_default_screen(f: &mut Frame, app: &mut App) {
     }
 }
 
-fn render_default_screen_body(f: &mut Frame, layout : Rect) {
+fn render_default_screen_body(f: &mut Frame, layout : Rect, color: Color) {
     let mut rng = rand::thread_rng();
     f.render_widget(
         Paragraph::new(format!("\n\nWelcome to the DB paradise!\nPress `Ctrl-C` to stop running."))
@@ -71,7 +71,7 @@ fn render_default_screen_body(f: &mut Frame, layout : Rect) {
                     .title_alignment(Alignment::Center)
                     .borders(Borders::ALL)
                     .border_type(BorderType::Double)
-                    .border_style(Style::default().fg(Color::White)),
+                    .border_style(Style::default().fg(color)),
             )
             .style(Style::default().fg(Color::Rgb(rng.gen_range(0..255), rng.gen_range(0..255), rng.gen_range(0..255))).bold())
             .alignment(Alignment::Center),
@@ -125,21 +125,28 @@ fn render_main_screen(f: &mut Frame, app: &mut App) {
             .split(layout[1]);
         match state {
             crate::app::app::OpenedDatabaseAppState::ActiveHood(e) => {
+                render_default_screen_body(f, layout[0], Color::White);
                 if e == "" {
                     render_screen_hood(f, inner_layout[0], Color::Cyan, app.get_buffer());
                 } else {
                     render_screen_hood(f, inner_layout[0], Color::Red, e);
                 }
+                render_default_screen_body(f, inner_layout[1], Color::White);
             },
             crate::app::app::OpenedDatabaseAppState::ActiveMenu => {
-                render_default_screen_body(f, layout[0]);
-                // render_screen_hood(f, inner_layout[0], Color::White, "".to_owned());
+                render_default_screen_body(f, layout[0], Color::Cyan);
+                render_screen_hood(f, inner_layout[0], Color::White, "".to_owned());
+                render_default_screen_body(f, inner_layout[1], Color::White);
             },
             crate::app::app::OpenedDatabaseAppState::ActiveTable => {
-                render_default_screen_body(f, inner_layout[1]);
+                render_default_screen_body(f, layout[0], Color::White);
+                render_screen_hood(f, inner_layout[0], Color::White, "".to_owned());
+                render_default_screen_body(f, inner_layout[1], Color::Cyan);
             },
             crate::app::app::OpenedDatabaseAppState::None => {
-                // render_screen_hood(f, inner_layout[0], Color::White, "".to_owned());
+                render_default_screen_body(f, layout[0], Color::White);
+                render_screen_hood(f, inner_layout[0], Color::White, "".to_owned());
+                render_default_screen_body(f, inner_layout[1], Color::White);
             },
         } 
     }
