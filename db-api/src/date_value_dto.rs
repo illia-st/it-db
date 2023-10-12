@@ -1,16 +1,17 @@
+use chrono::NaiveDateTime;
 use ion_rs;
-use core::types::real_value::RealValue;
+use core::types::date_value::DateValue;
 use core::types::ValueBuilder;
 use ion_rs::IonWriter;
 use ion_rs::IonReader;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct RealValueDTO {
-    pub value: RealValue,
+pub struct DateValueDTO {
+    pub value: DateValue,
 }
 
-impl RealValueDTO {
-    pub fn new(value: RealValue) -> RealValueDTO {
+impl DateValueDTO {
+    pub fn new(value: DateValue) -> DateValueDTO {
         Self { value }
     }
     pub fn encode(&self) -> Vec<u8> {
@@ -19,10 +20,11 @@ impl RealValueDTO {
         let binary_writer_builder = ion_rs::BinaryWriterBuilder::new();
         let mut writer = binary_writer_builder.build(buffer.clone()).unwrap();
 
+
         writer.step_in(ion_rs::IonType::Struct).expect("Error while creating an ion struct");
 
         writer.set_field_name("value");
-        writer.write_f64(self.value.get_value()).unwrap();
+        writer.write_string(&self.value.get_value().to_string()).unwrap();
 
         writer.step_out().unwrap();
         writer.flush().unwrap();
@@ -35,7 +37,8 @@ impl RealValueDTO {
         binary_user_reader.step_in().unwrap();
 
         binary_user_reader.next().unwrap();
-        let value = binary_user_reader.read_f64().unwrap();
-        RealValueDTO::new(RealValue::new(value))
+        let ans = binary_user_reader.read_string().unwrap().to_string();
+        let value = DateValue::new(NaiveDateTime::parse_from_str(ans.as_str(), "%b %d, %Y %H:%M:%S.%f %Z").unwrap().and_utc());
+        DateValueDTO::new(value)
     }
 }

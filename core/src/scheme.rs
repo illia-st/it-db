@@ -83,26 +83,6 @@ where
     }
 }
 
-pub struct SchemeDTO {
-    types: Vec<String>,
-    columns: Vec<String>,
-}
-
-impl SchemeDTO {
-    pub fn new(types: Vec<String>, columns: Vec<String>) -> Self {
-        Self {
-            types,
-            columns
-        }
-    }
-    pub fn encode(&self) -> Vec<u8> {
-        todo!()
-    }
-    pub fn decode(data: Vec<u8>) -> Self {
-        todo!()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     // TODO: implement tests
