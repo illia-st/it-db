@@ -1,6 +1,5 @@
 use ion_rs;
 use core::types::picture_value::PictureValue;
-use core::types::ValueBuilder;
 use ion_rs::IonWriter;
 use ion_rs::IonReader;
 

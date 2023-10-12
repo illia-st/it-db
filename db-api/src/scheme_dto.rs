@@ -1,6 +1,5 @@
 use ion_rs;
 use ion_rs::element::reader::ElementReader;
-use core::types::ValueBuilder;
 use ion_rs::IonWriter;
 use ion_rs::IonReader;
 use core::scheme::Scheme;

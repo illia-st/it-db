@@ -7,9 +7,6 @@ use core::table::Table;
 use core::scheme::Scheme;
 use core::types::CellValue;
 use core::row::Row;
-
-use crate::Encoder;
-use crate::Decoder;
 use crate::row_dto::RowDTO;
 use crate::scheme_dto::SchemeDTO;
 

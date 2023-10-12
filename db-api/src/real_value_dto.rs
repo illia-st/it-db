@@ -1,6 +1,5 @@
 use ion_rs;
 use core::types::real_value::RealValue;
-use core::types::ValueBuilder;
 use ion_rs::IonWriter;
 use ion_rs::IonReader;
 

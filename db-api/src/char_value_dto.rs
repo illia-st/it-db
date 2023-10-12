@@ -1,7 +1,7 @@
 use ion_rs;
 use core::types::char_value::CharValue;
 use core::types::ValueBuilder;
-use ion_rs::element::writer::TextKind;
+
 use ion_rs::IonWriter;
 use ion_rs::IonReader;
 
