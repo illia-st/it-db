@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use db_manager::db_manager::DatabaseManager;
+use core;
 
 pub enum Action {
     Tick,
@@ -42,6 +43,7 @@ pub struct App {
     database_state: DatabaseState,
     buffer: String,
     database_manager: DatabaseManager,
+    displayed_table: usize,
     selected_table: usize
 }
 
@@ -108,7 +110,7 @@ impl App {
         );
         match result {
             Ok(_) => {
-                self.database_state = DatabaseState::Closed(ClosedDatabaseAppState::None)
+                self.database_state = DatabaseState::Opened(OpenedDatabaseAppState::None)
             },
             Err(e) => {
                 self.opened_database_error(e);
@@ -171,7 +173,7 @@ impl App {
 
     pub fn selsect_next_table(&mut self) {
         if let Some(res) = self.selected_table.checked_add(1) {
-            if res <= self.get_table_count() {
+            if res <= self.get_table_count() - 1 {
                 self.selected_table = res;
             }
         }
@@ -183,5 +185,33 @@ impl App {
     }
     pub fn get_selected_table_index(&self) -> usize {
         self.selected_table
+    }
+
+    pub fn show_table(&mut self) {
+        self.displayed_table = self.selected_table
+    }
+
+    pub fn get_current_table(&self) -> Result<core::table::Table, String> {
+        if self.get_table_count() > 0 {
+            Ok(self.database_manager.get_table(&self.get_table_list()[self.displayed_table]).unwrap())
+        } else {
+            Err("Whoops, no tables in this database :(".to_owned())
+        }
+    }
+
+    pub fn add_row(&mut self, table_name: String, raw_values: String) {
+        let result = self.database_manager.add_row(&table_name, &raw_values);
+        match result {
+            Ok(_) => {
+                self.database_state = DatabaseState::Opened(OpenedDatabaseAppState::None)
+            },
+            Err(e) => {
+                self.opened_database_error(e);
+            },
+        }
+    }
+    
+    pub fn get_database_name(&self) -> String {
+        self.database_manager.get_database_name()
     }
 }

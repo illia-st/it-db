@@ -119,12 +119,23 @@ pub fn update(app: &mut App, key_event: KeyEvent) {
                             app.opened_database_error("Trying to create a database. But database is active".to_owned());
                         }
                     },
+                    Some(("add", args)) => {
+                        app.add_row(
+                            args.get_one::<String>("table_name").unwrap().to_owned(),
+                            args.get_one::<String>("row_value").unwrap().to_owned(),
+                        );
+                    }
                     _ => {
-                        app.opening_database_error("Unsupported comand for this hood".to_owned());
+                        app.opened_database_error("Unsupported comand for this hood".to_owned());
                     },
                 }
 
                 app.clear_buffer();
+            }
+
+            if let DatabaseState::Opened(OpenedDatabaseAppState::ActiveMenu) = app.get_database_state() {
+                app.show_table();
+                app.activete_opened_database_active_table();
             }
         },
         KeyCode::Backspace => {

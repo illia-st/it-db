@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use rand::Rng;
 use ratatui::style::Stylize;
 use ratatui::text::Span;
@@ -19,6 +21,8 @@ use ratatui::style::Color;
 use ratatui::style::Style;
 
 use rand;
+use ratatui::widgets::Row;
+use ratatui::widgets::Table;
 use ratatui::widgets::Wrap;
 
 use crate::app::app::{App, DatabaseState, ClosedDatabaseAppState};
@@ -79,13 +83,13 @@ fn render_screen_hood(f: &mut Frame, layout: Rect, color: Color, text: String) {
     )
 }
 
-fn render_active_menu(f: &mut Frame, layout: Rect, color: Color, tables: Vec<String>, index: usize) {
+fn render_active_menu(f: &mut Frame, layout: Rect, color: Color, db_name: String, table_names: Vec<String>, index: usize) {
     let mut lines: Vec<Line> = Vec::new();
-    for i in 0..tables.len() {
+    for i in 0..table_names.len() {
         if i == index {
-            lines.push(Line::from(Span::styled(&tables[i], Style::default().fg(Color::Cyan).bold())))
+            lines.push(Line::from(Span::styled(&table_names[i], Style::default().fg(Color::Cyan).bold())))
         } else {
-            lines.push(Line::from(Span::styled(&tables[i], Style::default().fg(Color::DarkGray))))
+            lines.push(Line::from(Span::styled(&table_names[i], Style::default().fg(Color::DarkGray))))
         }
     }
 
@@ -97,7 +101,8 @@ fn render_active_menu(f: &mut Frame, layout: Rect, color: Color, tables: Vec<Str
         Paragraph::new(lines)
             .block(
                 Block::default()
-                    .title_alignment(Alignment::Center)
+                    .title(format!(" {} ", db_name))
+                    .title_alignment(Alignment::Left)
                     .borders(Borders::ALL)
                     .border_type(BorderType::Thick)
                     .border_style(Style::default().fg(color)),
@@ -106,6 +111,83 @@ fn render_active_menu(f: &mut Frame, layout: Rect, color: Color, tables: Vec<Str
             .alignment(Alignment::Left),
             layout,
     )
+}
+
+fn render_active_table(f: &mut Frame, layout: Rect, color: Color, table_result: Result<core::table::Table, String>) {
+    if let Err(ref e) = table_result {
+        f.render_widget(
+            Paragraph::new(e.deref())
+                .block(
+                    Block::default()
+                        .title_alignment(Alignment::Center)
+                        .borders(Borders::ALL)
+                        .border_type(BorderType::Thick)
+                        .border_style(Style::default().fg(color)),
+                )
+                .wrap(Wrap { trim: true })
+                .alignment(Alignment::Left)
+                .style(Style::default().fg(Color::Red).bold().italic()),
+                layout,
+        );
+        return;
+    }
+
+    let table = table_result.unwrap();
+
+    let mut header_content: Vec<String> = Vec::new();
+    let mut widths = Vec::new();
+    for column_header in table.get_columns() {
+        header_content.push(column_header);
+        widths.push(Constraint::Length(10));
+    }
+    let table_header = Row::new(header_content);
+
+    let mut table_content = Vec::new();
+    for row in table.get_rows().iter() {
+        let mut row_content: Vec<String> = Vec::new();
+        for cell in row.get_values() {
+            let cell_content =
+                match cell.get_value() {
+                    core::types::ValueType::Int(int) => {
+                        int.get_value().to_string()
+                    },
+                    core::types::ValueType::Str(str) => {
+                        str.get_value().to_owned()
+                    },
+                    core::types::ValueType::Real(real) => {
+                        real.get_value().to_string()
+                    },
+                    core::types::ValueType::Pic(_picture) => {
+                        "picture".to_owned()
+                    },
+                    core::types::ValueType::Char(char) => {
+                        char.get_value().to_string()
+                    },
+                    core::types::ValueType::Date(date) => {
+                        date.get_value().to_string()
+                    },
+                };
+            row_content.push(cell_content);
+        }
+        table_content.push(Row::new(row_content));
+    }
+
+    let table = 
+        Table::new(table_content)
+            .style(Style::default().fg(color))
+            .header(table_header)
+            .block(
+                Block::default()
+                    .title(format!(" {} ", table.get_name()))
+                    .title_alignment(Alignment::Left)
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Thick)
+                    .border_style(Style::default().fg(color)),
+            )
+            .widths(&widths)
+            .column_spacing(1);
+
+    f.render_widget(table, layout);
 }
 
 fn render_default_screen(f: &mut Frame, app: &mut App) {
@@ -175,29 +257,29 @@ fn render_main_screen(f: &mut Frame, app: &mut App) {
 
         match state {
             crate::app::app::OpenedDatabaseAppState::ActiveHood(e) => {
-                render_active_menu(f, layout[0], Color::White, app.get_table_list(), app.get_selected_table_index());
+                render_active_menu(f, layout[0], Color::White, app.get_database_name(), app.get_table_list(), app.get_selected_table_index());
                 if e == "" {
                     render_screen_hood(f, inner_layout[0], Color::Cyan, app.get_buffer());
-                    render_default_screen_body(f, inner_layout[1], Color::White);
+                    render_active_table(f, inner_layout[1], Color::White, app.get_current_table());
                 } else {
                     render_screen_hood(f, err_inner_layout[0], Color::Red, e);
-                    render_default_screen_body(f, err_inner_layout[1], Color::White);
+                    render_active_table(f, err_inner_layout[1], Color::White, app.get_current_table());
                 }
             },
             crate::app::app::OpenedDatabaseAppState::ActiveMenu => {
-                render_active_menu(f, layout[0], Color::Cyan, app.get_table_list(), app.get_selected_table_index());
+                render_active_menu(f, layout[0], Color::Cyan, app.get_database_name(), app.get_table_list(), app.get_selected_table_index());
                 render_screen_hood(f, inner_layout[0], Color::White, "".to_owned());
-                render_default_screen_body(f, inner_layout[1], Color::White);
+                render_active_table(f, inner_layout[1], Color::White, app.get_current_table());
             },
             crate::app::app::OpenedDatabaseAppState::ActiveTable => {
-                render_active_menu(f, layout[0], Color::White, app.get_table_list(), app.get_selected_table_index());
+                render_active_menu(f, layout[0], Color::White, app.get_database_name(), app.get_table_list(), app.get_selected_table_index());
                 render_screen_hood(f, inner_layout[0], Color::White, "".to_owned());
-                render_default_screen_body(f, inner_layout[1], Color::Cyan);
+                render_active_table(f, inner_layout[1], Color::Cyan, app.get_current_table());
             },
             crate::app::app::OpenedDatabaseAppState::None => {
-                render_active_menu(f, layout[0], Color::White, app.get_table_list(), app.get_selected_table_index());
+                render_active_menu(f, layout[0], Color::White, app.get_database_name(), app.get_table_list(), app.get_selected_table_index());
                 render_screen_hood(f, inner_layout[0], Color::White, "".to_owned());
-                render_default_screen_body(f, inner_layout[1], Color::White);
+                render_active_table(f, inner_layout[1], Color::White, app.get_current_table());
             },
         } 
     }

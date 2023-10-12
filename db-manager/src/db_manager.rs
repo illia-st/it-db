@@ -13,11 +13,17 @@ use core::types::SUPPORTED_TYPES;
 use core::table::Table;
 
 // Can operate with one db-manager at the time
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct DatabaseManager {
     #[allow(clippy::type_complexity)]
     supported_types: HashMap<String, Arc<fn(String) -> Result<Rc<dyn CellValue>, String>>>,
     database: RefCell<Option<Database>>,
+}
+
+impl Default for DatabaseManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl DatabaseManager {
@@ -279,6 +285,10 @@ impl DatabaseManager {
             None => Err(format!("There is no table with name {}", table_name))
         };
         res
+    }
+
+    pub fn get_database_name(&self) -> String{
+        self.database.borrow().as_ref().unwrap().get_name().to_owned()
     }
 }
 
