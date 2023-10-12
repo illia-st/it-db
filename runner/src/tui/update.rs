@@ -27,7 +27,17 @@ pub fn update(app: &mut App, key_event: KeyEvent) {
                 app.clear_buffer();
             }
         },
-        | KeyCode::Char('s') | KeyCode::Char('S') => {
+        KeyCode::Char('[') => {
+            if let DatabaseState::Opened(OpenedDatabaseAppState::ActiveMenu) = app.get_database_state() {
+                app.selsect_priv_table()
+            }
+        }
+        KeyCode::Char(']') => {
+            if let DatabaseState::Opened(OpenedDatabaseAppState::ActiveMenu) = app.get_database_state() {
+                app.selsect_next_table()
+            }
+        }
+        KeyCode::Char('s') | KeyCode::Char('S') => {
             if key_event.modifiers == KeyModifiers::CONTROL {
                 if let DatabaseState::Opened(_) = app.get_database_state() {
                     app.close_database(true);
@@ -110,7 +120,7 @@ pub fn update(app: &mut App, key_event: KeyEvent) {
                         }
                     },
                     _ => {
-                        app.opened_database_error("Unsupported comand for this hood".to_owned());
+                        app.opening_database_error("Unsupported comand for this hood".to_owned());
                     },
                 }
 

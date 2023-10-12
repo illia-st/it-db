@@ -80,13 +80,17 @@ fn render_screen_hood(f: &mut Frame, layout: Rect, color: Color, text: String) {
 }
 
 fn render_active_menu(f: &mut Frame, layout: Rect, color: Color, tables: Vec<String>, index: usize) {
-    let mut lines: Vec<Line> = Vec::new(); 
+    let mut lines: Vec<Line> = Vec::new();
     for i in 0..tables.len() {
         if i == index {
             lines.push(Line::from(Span::styled(&tables[i], Style::default().fg(Color::Cyan).bold())))
         } else {
             lines.push(Line::from(Span::styled(&tables[i], Style::default().fg(Color::DarkGray))))
         }
+    }
+
+    if lines.len() == 0 {
+        lines.push(Line::from(Span::styled("Whoops, no tables in this database :(", Style::default().fg(Color::Red).bold().italic())))
     }
     
     f.render_widget(
@@ -171,7 +175,7 @@ fn render_main_screen(f: &mut Frame, app: &mut App) {
 
         match state {
             crate::app::app::OpenedDatabaseAppState::ActiveHood(e) => {
-                render_default_screen_body(f, layout[0], Color::White);
+                render_active_menu(f, layout[0], Color::White, app.get_table_list(), app.get_selected_table_index());
                 if e == "" {
                     render_screen_hood(f, inner_layout[0], Color::Cyan, app.get_buffer());
                     render_default_screen_body(f, inner_layout[1], Color::White);
@@ -181,17 +185,17 @@ fn render_main_screen(f: &mut Frame, app: &mut App) {
                 }
             },
             crate::app::app::OpenedDatabaseAppState::ActiveMenu => {
-                render_active_menu(f, layout[0], Color::Cyan, vec!["0\n".to_owned(), "1".to_owned()], 0);
+                render_active_menu(f, layout[0], Color::Cyan, app.get_table_list(), app.get_selected_table_index());
                 render_screen_hood(f, inner_layout[0], Color::White, "".to_owned());
                 render_default_screen_body(f, inner_layout[1], Color::White);
             },
             crate::app::app::OpenedDatabaseAppState::ActiveTable => {
-                render_default_screen_body(f, layout[0], Color::White);
+                render_active_menu(f, layout[0], Color::White, app.get_table_list(), app.get_selected_table_index());
                 render_screen_hood(f, inner_layout[0], Color::White, "".to_owned());
                 render_default_screen_body(f, inner_layout[1], Color::Cyan);
             },
             crate::app::app::OpenedDatabaseAppState::None => {
-                render_default_screen_body(f, layout[0], Color::White);
+                render_active_menu(f, layout[0], Color::White, app.get_table_list(), app.get_selected_table_index());
                 render_screen_hood(f, inner_layout[0], Color::White, "".to_owned());
                 render_default_screen_body(f, inner_layout[1], Color::White);
             },

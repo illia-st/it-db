@@ -42,6 +42,7 @@ pub struct App {
     database_state: DatabaseState,
     buffer: String,
     database_manager: DatabaseManager,
+    selected_table: usize
 }
 
 impl App {
@@ -163,5 +164,24 @@ impl App {
 
     pub fn get_table_list(&self) -> Vec<String> {
         self.database_manager.get_table_list()
+    }
+    pub fn get_table_count(&self) -> usize {
+        self.get_table_list().len()
+    }
+
+    pub fn selsect_next_table(&mut self) {
+        if let Some(res) = self.selected_table.checked_add(1) {
+            if res <= self.get_table_count() {
+                self.selected_table = res;
+            }
+        }
+    }
+    pub fn selsect_priv_table(&mut self) {
+        if let Some(res) = self.selected_table.checked_sub(1) {
+            self.selected_table = res;
+        }
+    }
+    pub fn get_selected_table_index(&self) -> usize {
+        self.selected_table
     }
 }
