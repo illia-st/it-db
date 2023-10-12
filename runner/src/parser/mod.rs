@@ -2,9 +2,6 @@ use clap::{Arg, ArgAction, Command};
 
 pub fn get_parser() -> Command {
     Command::new("database")
-            .author("Tretiakov Yehor, egorken3v@gmail.com")
-            .version("0.0.1")
-            .about("Some cool info!")
             .subcommands([
                 Command::new("create")
                     .args([

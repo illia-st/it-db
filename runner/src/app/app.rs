@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use db_manager::db_manager::DatabaseManager;
 
 pub enum Action {
@@ -60,13 +62,57 @@ impl App {
     pub fn get_database_state(&self) -> DatabaseState {
         self.database_state.clone()
     }
+    pub fn create_database(&mut self, name: String, database_path: String) {
+        let result = self.database_manager.create_db(&name, &database_path);
+        match result {
+            Ok(_) => {
+                self.database_state = DatabaseState::Opened(OpenedDatabaseAppState::None)
+            },
+            Err(e) => {
+                self.opening_database_error(e);
+            },
+        }
+    }
     pub fn open_database(&mut self, database_path: String) {
-        self.database_manager.read_db_from_directory(&database_path);
-        self.database_state = DatabaseState::Opened(OpenedDatabaseAppState::None)
+        let result = self.database_manager.read_db_from_directory(&database_path);
+        match result {
+            Ok(_) => {
+                self.database_state = DatabaseState::Opened(OpenedDatabaseAppState::None)
+            },
+            Err(e) => {
+                self.opening_database_error(e);
+            },
+        }
     }
     pub fn close_database(&mut self, need_to_save: bool) {
-        self.database_manager.close_db(need_to_save);
-        self.database_state = DatabaseState::Closed(ClosedDatabaseAppState::None)
+        let result = self.database_manager.close_db(need_to_save);
+        match result {
+            Ok(_) => {
+                self.database_state = DatabaseState::Closed(ClosedDatabaseAppState::None)
+            },
+            Err(e) => {
+                self.opening_database_error(e);
+            },
+        }
+    }
+
+    pub fn create_table(&mut self, table_name: String, columns: String, data_types: String) {
+        let column_names = columns.split_terminator(";").collect::<Vec<&str>>();
+        let column_data = data_types.split_terminator(";").collect::<Vec<&str>>();
+
+        let result = self.database_manager.create_table(
+            table_name.deref(),
+            column_names, 
+            column_data
+        );
+        match result {
+            Ok(_) => {
+                self.database_state = DatabaseState::Closed(ClosedDatabaseAppState::None)
+            },
+            Err(e) => {
+                self.opened_database_error(e);
+            },
+        }
     }
 
     pub fn activete_closed_database_hood(&mut self) {
@@ -83,7 +129,11 @@ impl App {
     }
     pub fn opening_database_error(&mut self, error: String) {
         self.database_state = DatabaseState::Closed(ClosedDatabaseAppState::ActiveHood(error));
-        todo!()
+        self.clear_buffer();
+    }
+    pub fn opened_database_error(&mut self, error: String) {
+        self.database_state = DatabaseState::Opened(OpenedDatabaseAppState::ActiveHood(error));
+        self.clear_buffer();
     }
 
     pub fn activete_opened_database_active_menu(&mut self) {

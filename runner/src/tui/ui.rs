@@ -35,34 +35,6 @@ pub fn render(app: &mut App, f: &mut Frame) {
     }
 }
 
-fn render_default_screen(f: &mut Frame, app: &mut App) {
-    if let DatabaseState::Closed(state) = app.get_database_state() {
-        let layout = 
-        Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Percentage(80),
-                Constraint::Percentage(20)
-            ].as_ref())
-            .split(f.size());
-    
-        render_default_screen_body(f, layout[0], Color::White);
-    
-        match state {
-            ClosedDatabaseAppState::ActiveHood(e) => {
-                if e == "" {
-                    render_screen_hood(f, layout[1], Color::Cyan, app.get_buffer());
-                } else {
-                    render_screen_hood(f, layout[1], Color::Red, e);
-                }
-            },
-            ClosedDatabaseAppState::None => {
-                render_screen_hood(f, layout[1], Color::White, "".to_owned());
-            },
-        }  
-    }
-}
-
 fn render_default_screen_body(f: &mut Frame, layout : Rect, color: Color) {
     let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
     f.render_widget(
@@ -132,6 +104,43 @@ fn render_active_menu(f: &mut Frame, layout: Rect, color: Color, tables: Vec<Str
     )
 }
 
+fn render_default_screen(f: &mut Frame, app: &mut App) {
+    if let DatabaseState::Closed(state) = app.get_database_state() {
+        let layout = 
+        Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Percentage(80),
+                Constraint::Percentage(20)
+            ].as_ref())
+            .split(f.size());
+        let err_layout = 
+        Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Percentage(20),
+                Constraint::Percentage(80)
+            ].as_ref())
+            .split(f.size());
+    
+        match state {
+            ClosedDatabaseAppState::ActiveHood(e) => {
+                if e == "" {
+                    render_default_screen_body(f, layout[0], Color::White);
+                    render_screen_hood(f, layout[1], Color::Cyan, app.get_buffer());
+                } else {
+                    render_default_screen_body(f, err_layout[0], Color::White);
+                    render_screen_hood(f, err_layout[1], Color::Red, e);
+                }
+            },
+            ClosedDatabaseAppState::None => {
+                render_default_screen_body(f, layout[0], Color::White);
+                render_screen_hood(f, layout[1], Color::White, "".to_owned());
+            },
+        }  
+    }
+}
+
 fn render_main_screen(f: &mut Frame, app: &mut App) {
     if let DatabaseState::Opened(state) = app.get_database_state() {
         let layout = 
@@ -151,15 +160,25 @@ fn render_main_screen(f: &mut Frame, app: &mut App) {
                 Constraint::Percentage(80)
             ].as_ref())
             .split(layout[1]);
+        let err_inner_layout = 
+        Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Percentage(80),
+                Constraint::Percentage(20)
+            ].as_ref())
+            .split(layout[1]);
+
         match state {
             crate::app::app::OpenedDatabaseAppState::ActiveHood(e) => {
                 render_default_screen_body(f, layout[0], Color::White);
                 if e == "" {
                     render_screen_hood(f, inner_layout[0], Color::Cyan, app.get_buffer());
+                    render_default_screen_body(f, inner_layout[1], Color::White);
                 } else {
-                    render_screen_hood(f, inner_layout[0], Color::Red, e);
+                    render_screen_hood(f, err_inner_layout[0], Color::Red, e);
+                    render_default_screen_body(f, err_inner_layout[1], Color::White);
                 }
-                render_default_screen_body(f, inner_layout[1], Color::White);
             },
             crate::app::app::OpenedDatabaseAppState::ActiveMenu => {
                 render_active_menu(f, layout[0], Color::Cyan, vec!["0\n".to_owned(), "1".to_owned()], 0);

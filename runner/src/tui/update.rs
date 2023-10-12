@@ -1,6 +1,10 @@
+use std::ops::Deref;
+
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
-use crate::app::app::{App, DatabaseState, ClosedDatabaseAppState, OpenedDatabaseAppState};
+use shellwords;
+
+use crate::{app::app::{App, DatabaseState, ClosedDatabaseAppState, OpenedDatabaseAppState}, parser::get_parser};
 
 pub fn update(app: &mut App, key_event: KeyEvent) {
     if let KeyCode::Char(char) = key_event.code {
@@ -42,7 +46,74 @@ pub fn update(app: &mut App, key_event: KeyEvent) {
         }
         KeyCode::Enter => {
             if let DatabaseState::Closed(ClosedDatabaseAppState::ActiveHood(_)) = app.get_database_state() {
-                app.open_database(app.get_buffer());
+                let words = shellwords::split(&app.get_buffer());
+                let matches = get_parser().try_get_matches_from_mut(words.unwrap());
+
+                match matches {
+                    Ok(_) => {},
+                    Err(e) => {
+                        app.opening_database_error(format!("{}", e));
+                        app.clear_buffer();
+                        return;
+                    },
+                }
+
+                match matches.unwrap().subcommand() {
+                    Some(("create", args)) => {
+                        if args.get_flag("table") {
+                            app.opening_database_error("Trying to create a table. But no database is active".to_owned());
+                        }
+                        if args.get_flag("database") {
+                            app.create_database(
+                                args.get_one::<String>("name").unwrap().to_owned(),
+                                args.get_one::<String>("database_path").unwrap().to_owned()
+                            );
+                        }
+                    },
+                    Some(("open", args)) => {
+                        app.open_database(
+                            args.get_one::<String>("database_path").unwrap().to_owned()
+                        );
+                    },
+                    _ => {
+                        app.opening_database_error("Unsupported comand for this hood".to_owned());
+                    },
+                }
+
+                app.clear_buffer();
+            }
+
+            if let DatabaseState::Opened(OpenedDatabaseAppState::ActiveHood(_)) = app.get_database_state() {
+                let words = shellwords::split(&app.get_buffer());
+                let matches = get_parser().try_get_matches_from_mut(words.unwrap());
+
+                match matches {
+                    Ok(_) => {},
+                    Err(e) => {
+                        app.opened_database_error(format!("{}", e));
+                        app.clear_buffer();
+                        return;
+                    },
+                }
+
+                match matches.unwrap().subcommand() {
+                    Some(("create", args)) => {
+                        if args.get_flag("table") {
+                            app.create_table(
+                                args.get_one::<String>("name").unwrap().to_owned(),
+                                args.get_one::<String>("table_column_names").unwrap().to_owned(),
+                                args.get_one::<String>("table_types").unwrap().to_owned()
+                            );
+                        }
+                        if args.get_flag("database") {
+                            app.opened_database_error("Trying to create a database. But database is active".to_owned());
+                        }
+                    },
+                    _ => {
+                        app.opened_database_error("Unsupported comand for this hood".to_owned());
+                    },
+                }
+
                 app.clear_buffer();
             }
         },

@@ -1,3 +1,4 @@
+use db_manager::db_manager::DatabaseManager;
 use ratatui::prelude::{CrosstermBackend, Terminal};
 
 use anyhow::Result;
