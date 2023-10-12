@@ -2,7 +2,12 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 use shellwords;
 
-use crate::{app::app::{App, DatabaseState, ClosedDatabaseAppState, OpenedDatabaseAppState}, parser::get_parser};
+use crate::app::App;
+use crate::app::ClosedDatabaseAppState;
+use crate::app::DatabaseState;
+use crate::app::OpenedDatabaseAppState;
+
+use crate::parser::get_parser;
 
 pub fn update(app: &mut App, key_event: KeyEvent) {
     if let KeyCode::Char(char) = key_event.code {

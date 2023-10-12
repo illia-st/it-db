@@ -2,9 +2,9 @@ use ratatui::prelude::CrosstermBackend;
 use ratatui::prelude::Terminal;
 
 use anyhow::Result;
-use runner::app::app::App;
+use runner::app::App;
 use runner::tui::event::{Event, EventHandler};
-use runner::tui::tui::Tui;
+use runner::tui::Tui;
 use runner::tui::update::update;
 
 

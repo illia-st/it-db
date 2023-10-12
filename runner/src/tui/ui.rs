@@ -25,8 +25,11 @@ use ratatui::widgets::Row;
 use ratatui::widgets::Table;
 use ratatui::widgets::Wrap;
 
-use crate::app::app::{App, DatabaseState, ClosedDatabaseAppState};
-use crate::tui::tui::Frame;
+use crate::app::App;
+use crate::app::ClosedDatabaseAppState;
+use crate::app::DatabaseState;
+
+use crate::tui::Frame;
 
 pub fn render(app: &mut App, f: &mut Frame) {
     match app.get_database_state() {
@@ -256,7 +259,7 @@ fn render_main_screen(f: &mut Frame, app: &mut App) {
             .split(layout[1]);
 
         match state {
-            crate::app::app::OpenedDatabaseAppState::ActiveHood(e) => {
+            crate::app::OpenedDatabaseAppState::ActiveHood(e) => {
                 render_active_menu(f, layout[0], Color::White, app.get_database_name(), app.get_table_list(), app.get_selected_table_index());
                 if e.is_empty() {
                     render_screen_hood(f, inner_layout[0], Color::Cyan, app.get_buffer());
@@ -266,17 +269,17 @@ fn render_main_screen(f: &mut Frame, app: &mut App) {
                     render_active_table(f, err_inner_layout[1], Color::White, app.get_current_table());
                 }
             },
-            crate::app::app::OpenedDatabaseAppState::ActiveMenu => {
+            crate::app::OpenedDatabaseAppState::ActiveMenu => {
                 render_active_menu(f, layout[0], Color::Cyan, app.get_database_name(), app.get_table_list(), app.get_selected_table_index());
                 render_screen_hood(f, inner_layout[0], Color::White, "".to_owned());
                 render_active_table(f, inner_layout[1], Color::White, app.get_current_table());
             },
-            crate::app::app::OpenedDatabaseAppState::ActiveTable => {
+            crate::app::OpenedDatabaseAppState::ActiveTable => {
                 render_active_menu(f, layout[0], Color::White, app.get_database_name(), app.get_table_list(), app.get_selected_table_index());
                 render_screen_hood(f, inner_layout[0], Color::White, "".to_owned());
                 render_active_table(f, inner_layout[1], Color::Cyan, app.get_current_table());
             },
-            crate::app::app::OpenedDatabaseAppState::None => {
+            crate::app::OpenedDatabaseAppState::None => {
                 render_active_menu(f, layout[0], Color::White, app.get_database_name(), app.get_table_list(), app.get_selected_table_index());
                 render_screen_hood(f, inner_layout[0], Color::White, "".to_owned());
                 render_active_table(f, inner_layout[1], Color::White, app.get_current_table());
