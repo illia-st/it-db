@@ -13,7 +13,7 @@ use core::types::SUPPORTED_TYPES;
 use core::table::Table;
 
 // Can operate with one db-manager at the time
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct DatabaseManager {
     #[allow(clippy::type_complexity)]
     supported_types: HashMap<String, Arc<fn(String) -> Result<Rc<dyn CellValue>, String>>>,
@@ -211,6 +211,9 @@ impl DatabaseManager {
         }
         Ok(self.database.borrow().as_ref().unwrap().get_tables().keys().cloned().collect())
     }
+    pub fn db_is_opened(&self) -> bool {
+        self.database.borrow().is_some()
+    }
 }
 
 impl Drop for DatabaseManager {
@@ -221,8 +224,6 @@ impl Drop for DatabaseManager {
 
 #[cfg(test)]
 mod tests {
-    
-
     #[test]
     fn test_creating_db_manager() {
         // DatabaseManager::new();
