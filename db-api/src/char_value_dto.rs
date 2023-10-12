@@ -5,7 +5,7 @@ use ion_rs::element::writer::TextKind;
 use ion_rs::IonWriter;
 use ion_rs::IonReader;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct CharValueDTO {
     pub value: CharValue,
 }
@@ -24,7 +24,7 @@ impl CharValueDTO {
         writer.step_in(ion_rs::IonType::Struct).expect("Error while creating an ion struct");
 
         writer.set_field_name("value");
-        writer.write_symbol(&self.value).unwrap();
+        writer.write_string(&self.value.get_value().to_string()).unwrap();
 
         writer.step_out().unwrap();
         writer.flush().unwrap();
@@ -37,7 +37,7 @@ impl CharValueDTO {
         binary_user_reader.step_in().unwrap();
 
         binary_user_reader.next().unwrap();
-        let ans = binary_user_reader.read_symbol().unwrap().to_string();
+        let ans = binary_user_reader.read_string().unwrap().to_string();
         let value = CharValue::builder()
             .with_raw_value(ans)
             .build()

@@ -5,7 +5,7 @@ use core::types::ValueBuilder;
 use ion_rs::IonWriter;
 use ion_rs::IonReader;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct DateValueDTO {
     pub value: DateValue,
 }

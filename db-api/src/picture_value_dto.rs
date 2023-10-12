@@ -4,7 +4,7 @@ use core::types::ValueBuilder;
 use ion_rs::IonWriter;
 use ion_rs::IonReader;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct PictureValueDTO {
     pub value: PictureValue,
 }
@@ -35,8 +35,8 @@ impl PictureValueDTO {
         binary_user_reader.step_in().unwrap();
 
         binary_user_reader.next().unwrap();
-        let value = binary_user_reader.read_blob().unwrap().as_slice();
-        let dynamic_image = image::load_from_memory(value).unwrap();
+        let value = binary_user_reader.read_blob().unwrap().to_owned();
+        let dynamic_image = image::load_from_memory(value.as_slice()).unwrap();
         PictureValueDTO::new(PictureValue::new(dynamic_image))
     }
 }

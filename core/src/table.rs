@@ -14,7 +14,7 @@ pub struct Table {
 
 impl Table
 {
-    fn new(name: String, scheme: Scheme<dyn CellValue>) -> Self {
+    pub fn new(name: String, scheme: Scheme<dyn CellValue>) -> Self {
         Self {
             name,
             scheme,
@@ -93,12 +93,6 @@ impl TableBuilder {
             Table::new(name, scheme)
         )
     }
-}
-
-pub struct TableDTO {
-    name: String,
-    scheme: SchemeDTO,
-    rows: Vec<RowDTO>,
 }
 
 #[cfg(test)]

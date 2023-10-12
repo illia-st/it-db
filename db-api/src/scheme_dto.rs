@@ -3,10 +3,24 @@ use ion_rs::element::reader::ElementReader;
 use core::types::ValueBuilder;
 use ion_rs::IonWriter;
 use ion_rs::IonReader;
+use core::scheme::Scheme;
+use core::types::CellValue;
+use core::types::SUPPORTED_TYPES;
+#[derive(Debug, PartialEq, Eq, Clone)]
 
 pub struct SchemeDTO {
     types: Vec<String>,
     columns: Vec<String>,
+}
+
+impl From<SchemeDTO> for Scheme<dyn CellValue> {
+    fn from(value: SchemeDTO) -> Self {
+        let mut value_generators = Vec::with_capacity(value.types.len());
+        value.types.iter().for_each(|ty| {
+            value_generators.push(SUPPORTED_TYPES.get(ty.as_str()).unwrap().clone());
+        });
+        Scheme::new(value.types, value.columns, value_generators)
+    }
 }
 
 impl SchemeDTO {

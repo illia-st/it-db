@@ -5,7 +5,7 @@ pub trait Encoder {
     fn encode(&self) -> Vec<u8>;
 }
 pub mod db;
-pub mod row;
+pub mod row_dto;
 pub mod table;
 pub mod envelope;
 
