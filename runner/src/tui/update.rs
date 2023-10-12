@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 use shellwords;

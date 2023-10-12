@@ -1,5 +1,5 @@
-use db_manager::db_manager::DatabaseManager;
-use ratatui::prelude::{CrosstermBackend, Terminal};
+use ratatui::prelude::CrosstermBackend;
+use ratatui::prelude::Terminal;
 
 use anyhow::Result;
 use runner::app::app::App;

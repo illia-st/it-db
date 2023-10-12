@@ -221,7 +221,7 @@ impl DatabaseManager {
         self.database.borrow().is_some()
     }
     pub fn get_table_list(&self) -> Vec<String> {
-        self.database.borrow().as_ref().unwrap().get_tables().keys().map(|x| -> String {x.clone()}).collect::<Vec<String>>()
+        self.database.borrow().as_ref().unwrap().get_tables().keys().cloned().collect::<Vec<String>>()
     }
 
     pub fn join(&self, lhs_table_name: &str, rhs_table_name: &str) -> Result<Table, String> {

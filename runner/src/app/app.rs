@@ -100,8 +100,8 @@ impl App {
     }
 
     pub fn create_table(&mut self, table_name: String, columns: String, data_types: String) {
-        let column_names = columns.split_terminator(";").collect::<Vec<&str>>();
-        let column_data = data_types.split_terminator(";").collect::<Vec<&str>>();
+        let column_names = columns.split_terminator(';').collect::<Vec<&str>>();
+        let column_data = data_types.split_terminator(';').collect::<Vec<&str>>();
 
         let result = self.database_manager.create_table(
             table_name.deref(),
@@ -173,7 +173,7 @@ impl App {
 
     pub fn selsect_next_table(&mut self) {
         if let Some(res) = self.selected_table.checked_add(1) {
-            if res <= self.get_table_count() - 1 {
+            if res < self.get_table_count() {
                 self.selected_table = res;
             }
         }

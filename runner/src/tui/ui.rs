@@ -42,7 +42,7 @@ pub fn render(app: &mut App, f: &mut Frame) {
 fn render_default_screen_body(f: &mut Frame, layout : Rect, color: Color) {
     let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
     f.render_widget(
-        Paragraph::new(format!("\n\nWelcome to the DB paradise!\nPress `Ctrl-C` to stop running."))
+        Paragraph::new("\n\nWelcome to the DB paradise!\nPress `Ctrl-C` to stop running.".to_string())
             .block(
                 Block::default()
                     .title_alignment(Alignment::Center)
@@ -85,15 +85,15 @@ fn render_screen_hood(f: &mut Frame, layout: Rect, color: Color, text: String) {
 
 fn render_active_menu(f: &mut Frame, layout: Rect, color: Color, db_name: String, table_names: Vec<String>, index: usize) {
     let mut lines: Vec<Line> = Vec::new();
-    for i in 0..table_names.len() {
+    for (i, table_name) in table_names.iter().enumerate() {
         if i == index {
-            lines.push(Line::from(Span::styled(&table_names[i], Style::default().fg(Color::Cyan).bold())))
+            lines.push(Line::from(Span::styled(table_name, Style::default().fg(Color::Cyan).bold())))
         } else {
-            lines.push(Line::from(Span::styled(&table_names[i], Style::default().fg(Color::DarkGray))))
+            lines.push(Line::from(Span::styled(table_name, Style::default().fg(Color::DarkGray))))
         }
     }
 
-    if lines.len() == 0 {
+    if lines.is_empty() {
         lines.push(Line::from(Span::styled("Whoops, no tables in this database :(", Style::default().fg(Color::Red).bold().italic())))
     }
     
@@ -211,7 +211,7 @@ fn render_default_screen(f: &mut Frame, app: &mut App) {
     
         match state {
             ClosedDatabaseAppState::ActiveHood(e) => {
-                if e == "" {
+                if e.is_empty() {
                     render_default_screen_body(f, layout[0], Color::White);
                     render_screen_hood(f, layout[1], Color::Cyan, app.get_buffer());
                 } else {
@@ -258,7 +258,7 @@ fn render_main_screen(f: &mut Frame, app: &mut App) {
         match state {
             crate::app::app::OpenedDatabaseAppState::ActiveHood(e) => {
                 render_active_menu(f, layout[0], Color::White, app.get_database_name(), app.get_table_list(), app.get_selected_table_index());
-                if e == "" {
+                if e.is_empty() {
                     render_screen_hood(f, inner_layout[0], Color::Cyan, app.get_buffer());
                     render_active_table(f, inner_layout[1], Color::White, app.get_current_table());
                 } else {
